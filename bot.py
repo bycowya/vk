@@ -157,12 +157,14 @@ user_states = {}
 def make_start_keyboard():
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("Начать", color=VkKeyboardColor.POSITIVE, payload={"command": "начать"})
+    keyboard.add_button("Завершить", color=VkKeyboardColor.NEGATIVE, payload={"command": "завершить"})
     return keyboard
 
 
 def make_return_keyboard():
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("Вернуться к вопросу", color=VkKeyboardColor.SECONDARY, payload={"command": "вернуться"})
+    keyboard.add_button("Завершить", color=VkKeyboardColor.NEGATIVE, payload={"command": "завершить"})
     return keyboard
 
 
@@ -178,7 +180,7 @@ def send_message(user_id, text, keyboard=None):
 def send_question(user_id):
     state = user_states[user_id]
     q = QUESTIONS[state["step"]]
-    send_message(user_id, q["text"], None)
+    send_message(user_id, q["text"], make_return_keyboard())
 
 
 def send_greeting(user_id):
@@ -195,6 +197,18 @@ def send_greeting(user_id):
 def start_quest(user_id):
     user_states[user_id] = {"step": 0, "score": 0, "answered_wrong": False}
     send_question(user_id)
+
+
+def finish_quest(user_id):
+    state = user_states.get(user_id)
+    if state:
+        send_message(
+            user_id,
+            f"Квест завершён. Твой результат: {state['score']} из 17."
+        )
+        del user_states[user_id]
+    else:
+        send_message(user_id, "Квест завершён. Если хочешь пройти заново — нажми «Начать».")
 
 
 def handle_answer(user_id, answer_text):
@@ -257,6 +271,10 @@ def main():
                     send_question(user_id)
                 else:
                     start_quest(user_id)
+                continue
+
+            if "завершить" in cmd_norm:
+                finish_quest(user_id)
                 continue
 
             if "вернуться" in cmd_norm:
