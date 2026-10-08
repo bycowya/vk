@@ -3,8 +3,8 @@ import re
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-
-TOKEN = vk1.a.Z6Ig3ZMBPcWfjE4ljg0DMTMsRasD9Ppb-VjGgmCUIS4wJRfYFuo7ZTasi4_3YDu8C9IJFFqySzdGS-BtscLVOPDnKb0ZQCzXhK875WXxVZpK9CNyvBMAx-erUFSpZoIi8hpmfJ3Mxb4pZITUX5Tk_7cZz1kspFdDUoPI650430XkgU30sNTlSptVY1KomkqQmUoRg8F-k8ynyZvPWU7mTQ
+import os
+TOKEN = os.environ.get("VK_TOKEN")
 
 vk_session = vk_api.VkApi(token=TOKEN)
 longpoll = VkLongPoll(vk_session)
