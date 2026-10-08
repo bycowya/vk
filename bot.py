@@ -1,9 +1,11 @@
 import random
 import re
+import json
+import os
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-import os
+
 TOKEN = os.environ.get("VK_TOKEN")
 
 vk_session = vk_api.VkApi(token=TOKEN)
@@ -154,13 +156,13 @@ user_states = {}
 
 def make_start_keyboard():
     keyboard = VkKeyboard(one_time=False)
-    keyboard.add_button("Начать", color=VkKeyboardColor.POSITIVE)
+    keyboard.add_button("Начать", color=VkKeyboardColor.POSITIVE, payload={"command": "начать"})
     return keyboard
 
 
 def make_return_keyboard():
     keyboard = VkKeyboard(one_time=False)
-    keyboard.add_button("Вернуться к вопросу", color=VkKeyboardColor.SECONDARY)
+    keyboard.add_button("Вернуться к вопросу", color=VkKeyboardColor.SECONDARY, payload={"command": "вернуться"})
     return keyboard
 
 
@@ -230,11 +232,24 @@ def main():
             user_id = event.user_id
             text = event.text.strip()
 
-            if text.lower() in ("начать", "start", "/start"):
+            payload = None
+            if hasattr(event, "payload") and event.payload:
+                try:
+                    payload = json.loads(event.payload)
+                except Exception:
+                    payload = None
+
+            command = text
+            if not command and payload and "command" in payload:
+                command = payload["command"]
+
+            cmd_norm = command.strip().lower()
+
+            if cmd_norm in ("начать", "start", "/start"):
                 start_quest(user_id)
                 continue
 
-            if text == "Вернуться к вопросу":
+            if cmd_norm == "вернуться":
                 state = user_states.get(user_id)
                 if state:
                     send_question(user_id)
@@ -243,7 +258,7 @@ def main():
             if user_id not in user_states:
                 continue
 
-            handle_answer(user_id, text)
+            handle_answer(user_id, command)
 
 
 if __name__ == "__main__":
