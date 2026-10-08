@@ -6,7 +6,7 @@ import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
-TOKEN = os.environ.get("VK_TOKEN")
+TOKEN = os.environ.get("BOT_TOKEN")
 
 vk_session = vk_api.VkApi(token=TOKEN)
 longpoll = VkLongPoll(vk_session)
