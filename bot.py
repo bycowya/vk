@@ -260,7 +260,7 @@ def main():
             if user_id not in user_states:
                 continue
 
-            handle_answer(user_id, command))
+            handle_answer(user_id, command)
 
 
 if __name__ == "__main__":
