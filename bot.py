@@ -161,9 +161,17 @@ def make_start_keyboard():
     return keyboard
 
 
+def make_question_keyboard():
+    keyboard = VkKeyboard(one_time=False)
+    keyboard.add_button("Пропустить", color=VkKeyboardColor.SECONDARY, payload={"command": "пропустить"})
+    keyboard.add_button("Завершить", color=VkKeyboardColor.NEGATIVE, payload={"command": "завершить"})
+    return keyboard
+
+
 def make_return_keyboard():
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("Вернуться к вопросу", color=VkKeyboardColor.SECONDARY, payload={"command": "вернуться"})
+    keyboard.add_button("Пропустить", color=VkKeyboardColor.SECONDARY, payload={"command": "пропустить"})
     keyboard.add_button("Завершить", color=VkKeyboardColor.NEGATIVE, payload={"command": "завершить"})
     return keyboard
 
@@ -180,7 +188,7 @@ def send_message(user_id, text, keyboard=None):
 def send_question(user_id):
     state = user_states[user_id]
     q = QUESTIONS[state["step"]]
-    send_message(user_id, q["text"], make_return_keyboard())
+    send_message(user_id, q["text"], make_question_keyboard())
 
 
 def send_greeting(user_id):
@@ -211,6 +219,27 @@ def finish_quest(user_id):
         send_message(user_id, "Квест завершён. Если хочешь пройти заново — нажми «Начать».")
 
 
+def skip_question(user_id):
+    state = user_states.get(user_id)
+    if not state:
+        return
+    state["step"] += 1
+    state["answered_wrong"] = False
+    if state["step"] < len(QUESTIONS):
+        send_message(
+            user_id,
+            f"Вопрос пропущен. Баллы не начислены. У вас {state['score']} баллов."
+        )
+        send_question(user_id)
+    else:
+        send_message(
+            user_id,
+            f"Вопрос пропущен. Баллы не начислены. У вас {state['score']} баллов.\n\n"
+            f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
+        )
+        del user_states[user_id]
+
+
 def handle_answer(user_id, answer_text):
     state = user_states.get(user_id)
     if not state:
@@ -228,20 +257,46 @@ def handle_answer(user_id, answer_text):
     if is_correct:
         if not state["answered_wrong"]:
             state["score"] += 1
-        state["step"] += 1
-        state["answered_wrong"] = False
+            state["step"] += 1
+            state["answered_wrong"] = False
 
-        if state["step"] < len(QUESTIONS):
-            send_question(user_id)
+            if state["step"] < len(QUESTIONS):
+                send_message(
+                    user_id,
+                    f"Правильно! У вас {state['score']} баллов."
+                )
+                send_question(user_id)
+            else:
+                send_message(
+                    user_id,
+                    f"Правильно! У вас {state['score']} баллов.\n\n"
+                    f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
+                )
+                del user_states[user_id]
         else:
-            send_message(
-                user_id,
-                f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
-            )
-            del user_states[user_id]
+            state["step"] += 1
+            state["answered_wrong"] = False
+
+            if state["step"] < len(QUESTIONS):
+                send_message(
+                    user_id,
+                    f"Правильно! Баллы не начислены, так как вы уже ошибались в этом вопросе. У вас {state['score']} баллов."
+                )
+                send_question(user_id)
+            else:
+                send_message(
+                    user_id,
+                    f"Правильно! Баллы не начислены, так как вы уже ошибались в этом вопросе. У вас {state['score']} баллов.\n\n"
+                    f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
+                )
+                del user_states[user_id]
     else:
         state["answered_wrong"] = True
-        send_message(user_id, q["hint"], make_return_keyboard())
+        send_message(
+            user_id,
+            f"Неправильно! Вам не будут начислены баллы. Вот пояснение исторической справки:\n\n{q['hint']}",
+            make_return_keyboard()
+        )
 
 
 def main():
@@ -275,6 +330,10 @@ def main():
 
             if "завершить" in cmd_norm:
                 finish_quest(user_id)
+                continue
+
+            if "пропустить" in cmd_norm:
+                skip_question(user_id)
                 continue
 
             if "вернуться" in cmd_norm:
