@@ -20,6 +20,21 @@ def normalize(text):
     return text
 
 
+def ballov(n):
+    n_abs = abs(n) % 100
+    if 11 <= n_abs <= 19:
+        word = "баллов"
+    else:
+        n_last = n_abs % 10
+        if n_last == 1:
+            word = "балл"
+        elif 2 <= n_last <= 4:
+            word = "балла"
+        else:
+            word = "баллов"
+    return f"{n} {word}"
+
+
 QUESTIONS = [
     {
         "text": "Вопрос 1. Установите соответствие между событиями и участниками.\n\nСобытия:\nА) Московская битва\nБ) Битва за Берлин\nВ) Освобождение Минска\nГ) Сталинградская битва\n\nУчастники:\n1. Г.К. Жуков\n2. М.В. Кантария\n3. И.Д. Черняховский\n4. В.Г. Зайцев\n\n(Введите ответ в формате: А-1, Б-2, В-3, Г-4)",
@@ -222,11 +237,16 @@ def finish_quest(user_id):
     if state:
         send_message(
             user_id,
-            f"Квест завершён. Твой результат: {state['score']} из 17."
+            f"Квест завершён. Твой результат: {state['score']} из 17.",
+            make_start_keyboard()
         )
         del user_states[user_id]
     else:
-        send_message(user_id, "Квест завершён. Если хочешь пройти заново — нажми «Начать».")
+        send_message(
+            user_id,
+            "Квест завершён. Если хочешь пройти заново — нажми «Начать».",
+            make_start_keyboard()
+        )
 
 
 def skip_question(user_id):
@@ -238,14 +258,15 @@ def skip_question(user_id):
     if state["step"] < len(QUESTIONS):
         send_message(
             user_id,
-            f"Вопрос пропущен. Баллы не начислены. У вас {state['score']} баллов."
+            f"Вопрос пропущен. Баллы не начислены. У вас {ballov(state['score'])}."
         )
         send_question(user_id)
     else:
         send_message(
             user_id,
-            f"Вопрос пропущен. Баллы не начислены. У вас {state['score']} баллов.\n\n"
-            f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
+            f"Вопрос пропущен. Баллы не начислены. У вас {ballov(state['score'])}.\n\n"
+            f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17.",
+            make_start_keyboard()
         )
         del user_states[user_id]
 
@@ -273,14 +294,15 @@ def handle_answer(user_id, answer_text):
             if state["step"] < len(QUESTIONS):
                 send_message(
                     user_id,
-                    f"Правильно! У вас {state['score']} баллов."
+                    f"Правильно! У вас {ballov(state['score'])}."
                 )
                 send_question(user_id)
             else:
                 send_message(
                     user_id,
-                    f"Правильно! У вас {state['score']} баллов.\n\n"
-                    f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
+                    f"Правильно! У вас {ballov(state['score'])}.\n\n"
+                    f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17.",
+                    make_start_keyboard()
                 )
                 del user_states[user_id]
         else:
@@ -290,14 +312,15 @@ def handle_answer(user_id, answer_text):
             if state["step"] < len(QUESTIONS):
                 send_message(
                     user_id,
-                    f"Правильно! Баллы не начислены, так как вы уже ошибались в этом вопросе. У вас {state['score']} баллов."
+                    f"Правильно! Баллы не начислены, так как вы уже ошибались в этом вопросе. У вас {ballov(state['score'])}."
                 )
                 send_question(user_id)
             else:
                 send_message(
                     user_id,
-                    f"Правильно! Баллы не начислены, так как вы уже ошибались в этом вопросе. У вас {state['score']} баллов.\n\n"
-                    f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17."
+                    f"Правильно! Баллы не начислены, так как вы уже ошибались в этом вопросе. У вас {ballov(state['score'])}.\n\n"
+                    f"Поздравляем, квест пройден! Твой результат: {state['score']} из 17.",
+                    make_start_keyboard()
                 )
                 del user_states[user_id]
     else:
