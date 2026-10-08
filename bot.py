@@ -239,6 +239,8 @@ def main():
                 except Exception:
                     payload = None
 
+            print(f"DEBUG: TEXT='{text}' | PAYLOAD={payload} | USER={user_id}", flush=True)
+
             command = text
             if not command and payload and "command" in payload:
                 command = payload["command"]
@@ -258,7 +260,7 @@ def main():
             if user_id not in user_states:
                 continue
 
-            handle_answer(user_id, command)
+            handle_answer(user_id, command))
 
 
 if __name__ == "__main__":
