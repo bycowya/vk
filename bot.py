@@ -181,16 +181,19 @@ def send_question(user_id):
     send_message(user_id, q["text"], None)
 
 
-def start_quest(user_id):
-    user_states[user_id] = {"step": 0, "score": 0, "answered_wrong": False}
+def send_greeting(user_id):
     send_message(
         user_id,
         "Привет! Я твой цифровой тренажер «Чтобы помнили». "
         "Я помогу тебе закрепить самые сложные темы Великой Отечественной войны "
         "для реального ЕГЭ по истории. Тебя ждет интерактивный квест. "
         "Ответь на все вопросы и проверь свои силы перед экзаменом. Поехали!",
-        None
+        make_start_keyboard()
     )
+
+
+def start_quest(user_id):
+    user_states[user_id] = {"step": 0, "score": 0, "answered_wrong": False}
     send_question(user_id)
 
 
@@ -248,17 +251,22 @@ def main():
 
             cmd_norm = command.strip().lower()
 
-            if cmd_norm in ("начать", "start", "/start"):
-                start_quest(user_id)
+            if "начать" in cmd_norm or cmd_norm in ("start", "/start"):
+                if user_id in user_states:
+                    send_message(user_id, "Ты уже проходишь квест. Продолжай!")
+                    send_question(user_id)
+                else:
+                    start_quest(user_id)
                 continue
 
-            if cmd_norm == "вернуться":
+            if "вернуться" in cmd_norm:
                 state = user_states.get(user_id)
                 if state:
                     send_question(user_id)
                 continue
 
             if user_id not in user_states:
+                send_greeting(user_id)
                 continue
 
             handle_answer(user_id, command)
