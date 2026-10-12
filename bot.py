@@ -5,7 +5,6 @@ import os
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-import json
 
 with open("questions.json", "r", encoding="utf-8") as f:
     QUESTIONS = json.load(f)
@@ -37,6 +36,7 @@ def ballov(n):
         else:
             word = "баллов"
     return f"{n} {word}"
+
 
 user_states = {}
 
@@ -74,7 +74,7 @@ def send_message(user_id, text, keyboard=None):
 def send_question(user_id):
     state = user_states[user_id]
     q = QUESTIONS[state["step"]]
-    attachment = q.get("attachment")
+    attachment = q.get("attachment_vk")
     vk.messages.send(
         user_id=user_id,
         message=q["text"],
